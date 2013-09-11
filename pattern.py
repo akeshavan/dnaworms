@@ -1,9 +1,6 @@
 from nipype.utils.filemanip import load_json, save_json
 from copy import deepcopy
-
-f = load_json("test2.json")
-vstrands = f["vstrands"]
-num_v = len(vstrands)
+import sys
 
 def get_strand_idx(stap):
     """
@@ -33,9 +30,6 @@ def calculate_shift():
 
     return max(all_shifts)
 
-s = calculate_shift()
-print "shift value = ", s
-
 def add_except_n1(l,val):
     """
     Add val to the 1'st and 3rd number in the list except if there is a -1
@@ -49,8 +43,7 @@ def add_except_n1(l,val):
 
     return L
 
-
-def do_shift(shift,n=1):
+def do_shift(shift,N=1):
     """
     apply shift to dictionary
     """
@@ -59,15 +52,26 @@ def do_shift(shift,n=1):
     for i,vs in enumerate(vstrands):
         stapidx = get_strand_idx(vs["stap"])
 	scafidx = get_strand_idx(vs["scaf"])
-	# TODO: Loop this over n to repeat
-	for stidx in stapidx:
-	    if stidx+shift > scafidx[-1]:
-                raise Exception("Shift value is too high!")
-	    vs["stap"][stidx+shift] = add_except_n1(vs["stap"][stidx],shift)
+	for n in range(1,N+1):
+		for stidx in stapidx:
+			if stidx+shift*n > scafidx[-1]:
+					raise Exception("Shift value is too high!")
+			vs["stap"][stidx+shift*n] = add_except_n1(vs["stap"][stidx],shift*n)
 
-        vs["stap_colors"] = vs["stap_colors"]*2 ## This will change according to n!
-    
-print "result"
-do_shift(s)
+    vs["stap_colors"] = vs["stap_colors"]*(N+1) 
 
-save_json("test3.json",f)
+
+if __name__ == "__name__":
+	help = "USAGE: python <filename> <number of repeats> <out filename>"
+	if len(sys.argv) != 4:
+		raise Exception(help)
+	else:
+        f = load_json(sys.argv[1])
+		vstrands = f["vstrands"]
+		num_v = len(vstrands)
+		s = calculate_shift()
+		print "shifting by ", s
+		do_shift(s,sys.argv[2])
+		save_json(sys.argv[3],f)
+
+
