@@ -52,26 +52,28 @@ def do_shift(shift,N=1):
     for i,vs in enumerate(vstrands):
         stapidx = get_strand_idx(vs["stap"])
         scafidx = get_strand_idx(vs["scaf"])
-        for n in range(1,N+1):
-            for stidx in stapidx:
+        for stidx in stapidx:
+            for n in range(1,N+1):
                 if stidx+shift*n > scafidx[-1]:
-                    raise Exception("Shift value is too high!")
-                vs["stap"][stidx+shift*n] = add_except_n1(vs["stap"][stidx],shift*n)
-
-        vs["stap_colors"] = vs["stap_colors"]*(N+1) 
+                    print "Shift value is too high! Stopping at n = ", n
+                    break
+                else:
+                    vs["stap"][stidx+shift*n] = add_except_n1(vs["stap"][stidx],shift*n)
+                    
+        vs["stap_colors"] = vs["stap_colors"]*(n+1) 
 
 
 help = "USAGE: python <filename> <number of repeats> <out filename>"
 if len(sys.argv) != 4:
-	raise Exception(help)
+    raise Exception(help)
 else:
-	print sys.argv
-	f = load_json(sys.argv[1])
-	vstrands = f["vstrands"]
-	num_v = len(vstrands)
-	s = calculate_shift()
-	print "shifting by ", s
-	do_shift(s,int(sys.argv[2]))
-	save_json(sys.argv[3],f)
+    print sys.argv
+    f = load_json(sys.argv[1])
+    vstrands = f["vstrands"]
+    num_v = len(vstrands)
+    s = calculate_shift()
+    print "shifting by ", s
+    do_shift(s,int(sys.argv[2]))
+    save_json(sys.argv[3],f)
 
 
