@@ -17,17 +17,21 @@ def calculate_shift():
     all_shifts = []
     for i,vs in enumerate(vstrands):
         stap = get_strand_idx(vs["stap"])
-        scaf = get_strand_idx(vs["scaf"])
-        first_stap, last_stap = stap[0], stap[-1]
-        first_scaf, last_scaf = scaf[0], scaf[-1]
-        #find the closest multiple of 21 past staple length 
-        staple_length = last_stap - first_stap
-        if staple_length % 21:
-            shift = staple_length + (21 - staple_length % 21)
+        #scaf = get_strand_idx(vs["scaf"])
+        if len(stap):
+            first_stap, last_stap = stap[0], stap[-1]
+            staple_length = last_stap - first_stap
+            if staple_length % 21:
+                shift = staple_length + (21 - staple_length % 21)
+            else:
+                shift = staple_length + 21
+            all_shifts.append(shift)
         else:
-            shift = staple_length
-        all_shifts.append(shift)
-
+            continue
+        #if len(scaf):
+        #    first_scaf, last_scaf = scaf[0], scaf[-1]
+        #find the closest multiple of 21 past staple length 
+       
     return max(all_shifts)
 
 def add_except_n1(l,val):
