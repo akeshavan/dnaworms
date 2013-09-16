@@ -1,7 +1,7 @@
 from nipype.utils.filemanip import load_json, save_json
 from copy import deepcopy
 import sys
-
+   
 def get_strand_idx(stap):
     """
     stap is a list of staples from vstrands[idx]["stap"]
@@ -60,8 +60,10 @@ def do_shift(shift,N=1):
                 else:
                     vs["stap"][stidx+shift*n] = add_except_n1(vs["stap"][stidx],shift*n)
                     
-        vs["stap_colors"] = vs["stap_colors"]*(n+1) 
-
+        L = len(vs["stap_colors"])
+        for j in range(1,n+1):
+            vs["stap_colors"] += [[s[0]+shift*j,s[1]] for s in vs["stap_colors"][:L]]   
+      
 
 help = "USAGE: python <filename> <number of repeats> <out filename>"
 if len(sys.argv) != 4:
