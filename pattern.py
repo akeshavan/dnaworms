@@ -34,6 +34,16 @@ def calculate_shift():
        
     return max(all_shifts)
 
+def get_max_shifts(shift):
+    import numpy as np
+    Ns = []
+    for i,vs in enumerate(vstrands):
+        stap = get_strand_idx(vs["stap"])
+        scaf = get_strand_idx(vs["scaf"])
+        N = np.floor(np.int(scaf[-1]-stap[-1])/shift)
+        Ns.append(N)
+    return int(min(Ns))
+
 def add_except_n1(l,val):
     """
     Add val to the 1'st and 3rd number in the list except if there is a -1
@@ -78,8 +88,13 @@ else:
     vstrands = f["vstrands"]
     num_v = len(vstrands)
     s = calculate_shift()
+    N = get_max_shifts(s)
+    n = int(sys.argv[2])
+    if n>N:
+        print "number of copies too high, adjusting to N = ", N
+        n = N
     print "shifting by ", s
-    do_shift(s,int(sys.argv[2]))
+    do_shift(s,n)
     save_json(sys.argv[3],f)
 
 
