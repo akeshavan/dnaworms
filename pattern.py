@@ -1,7 +1,41 @@
-from nipype.utils.filemanip import load_json, save_json
 from copy import deepcopy
 import sys
-   
+ 
+def load_json(filename):
+    """Load data from a json file
+
+    Parameters
+    ----------
+    filename : str
+        Filename to load data from.
+
+    Returns
+    -------
+    data : dict
+
+    """
+
+    fp = file(filename, 'r')
+    data = json.load(fp)
+    fp.close()
+    return data
+
+def save_json(filename, data):
+    """Save data to a json file
+
+    Parameters
+    ----------
+    filename : str
+        Filename to save data in.
+    data : dict
+        Dictionary to save in json file.
+
+    """
+
+    fp = file(filename, 'w')
+    json.dump(data, fp, sort_keys=True, indent=4)
+    fp.close()
+  
 def get_strand_idx(stap):
     """
     stap is a list of staples from vstrands[idx]["stap"]
