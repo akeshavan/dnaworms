@@ -1,6 +1,6 @@
 from copy import deepcopy
 import sys
- 
+import json 
 def load_json(filename):
     """Load data from a json file
 
@@ -43,15 +43,14 @@ def get_strand_idx(stap):
     i = [idx for idx,s in enumerate(stap) if not s==[-1,-1,-1,-1] ]
     return i
 
-def calculate_shift():
+def calculate_shift(vstrands,key="stap"):
     """
     We want to copy staples from the idx of the beginning scaffold strand up to the last staple idx, n times by 21 or until the last idx of the added staple pattern is > the last scaffold idx.
     
     """
     all_shifts = []
     for i,vs in enumerate(vstrands):
-        stap = get_strand_idx(vs["stap"])
-        #scaf = get_strand_idx(vs["scaf"])
+        stap = get_strand_idx(vs[key])
         if len(stap):
             first_stap, last_stap = stap[0], stap[-1]
             staple_length = last_stap - first_stap
@@ -91,44 +90,78 @@ def add_except_n1(l,val):
 
     return L
 
-def do_shift(shift,N=1):
+def connector(vstrands):
+    """
+    Connect staple strands if there is a break anywhere
+    """
+    for vs in vstrands:
+        idx = [i for i,s in enumerate(vs["scaf"][:-2]) if (s[2]  == -1 and s[3]==-1 and s[1] != -1 and s[0] != -1)\
+                and (vs["scaf"][i+1][0]==-1 and  vs["scaf"][i+1][1]==-1 and vs["scaf"][i+1][2]!=-1 and  vs["scaf"][i+1][3]!=-1)]    
+        idx2 = [i for i,s in enumerate(vs["scaf"][:-2]) if (s[2]  != -1 and s[3]!=-1 and s[1] == -1 and s[0] == -1)\
+                and (vs["scaf"][i+1][0]!=-1 and  vs["scaf"][i+1][1]!=-1 and vs["scaf"][i+1][2]==-1 and  vs["scaf"][i+1][3]==-1)]    
+        for id in idx:
+            a,b,_,_ = vs["scaf"][id]
+            _,_,c,d = vs["scaf"][id+1]
+            print vs["scaf"][id], a,b,c,d
+            vs["scaf"][id] = [a,b,c,d-1]
+            vs["scaf"][id+1] = [a,b+1,c,d]
+
+        for id in idx2:
+            a,b,_,_ = vs["scaf"][id+1]
+            _,_,c,d = vs["scaf"][id]
+            print vs["scaf"][id], a,b,c,d
+            vs["scaf"][id] = [a,b-1,c,d]
+            vs["scaf"][id+1] = [a,b,c,d+1]
+
+
+def do_shift(vstrands,shift,N=1,key="stap"):
     """
     apply shift to dictionary
     """
 
     # remember to check we aren't going to shift past the scaffold strand
     for i,vs in enumerate(vstrands):
-        stapidx = get_strand_idx(vs["stap"])
-        scafidx = get_strand_idx(vs["scaf"])
+        stapidx = get_strand_idx(vs[key])
+        #scafidx = get_strand_idx(vs["scaf"])
+        if key == "scaf":
+            vs["scaf"] += [[-1,-1,-1,-1]]*shift*N # add shift amount of spaces
+            vs["stap"] += [[-1,-1,-1,-1]]*shift*N
+            vs["loop"] += [0]*shift*N
+            vs["skip"] += [0]*shift*N
         for stidx in stapidx:
             for n in range(1,N+1):
-                if stidx+shift*n > scafidx[-1]:
-                    print "Shift value is too high! Stopping at n = ", n
-                    break
-                else:
-                    vs["stap"][stidx+shift*n] = add_except_n1(vs["stap"][stidx],shift*n)
-                    
+                #if stidx+shift*n > scafidx[-1]:
+                #    print "Shift value is too high! Stopping at n = ", n
+                #    break
+                #else:
+                vs[key][stidx+shift*n] = add_except_n1(vs[key][stidx],shift*n)
+    
         L = len(vs["stap_colors"])
-        for j in range(1,n+1):
-            vs["stap_colors"] += [[s[0]+shift*j,s[1]] for s in vs["stap_colors"][:L]]   
+        if key=="stap":
+            for j in range(1,n+1):
+                vs["%s_colors"%key] += [[s[0]+shift*j,s[1]] for s in vs["%s_colors"%key][:L]]   
       
 
-help = "USAGE: python <filename> <number of repeats> <out filename>"
-if len(sys.argv) != 4:
-    raise Exception(help)
-else:
-    print sys.argv
-    f = load_json(sys.argv[1])
-    vstrands = f["vstrands"]
-    num_v = len(vstrands)
-    s = calculate_shift()
-    N = get_max_shifts(s)
-    n = int(sys.argv[2])
-    if n>N:
-        print "number of copies too high, adjusting to N = ", N
-        n = N
-    print "shifting by ", s
-    do_shift(s,n)
-    save_json(sys.argv[3],f)
-
+if __name__ == "__main__":
+    help = "USAGE: python <filename> <number of repeats> <out filename> <scaf or stap>"
+    if len(sys.argv) != 5:
+        raise Exception(help)
+    else:
+        f = load_json(sys.argv[1])
+        vstrands = f["vstrands"]
+        if sys.argv[-1] == "stap":
+            s = calculate_shift(vstrands)
+            N = get_max_shifts(s)
+            n = int(sys.argv[2])
+            if n>N:
+                print "number of copies too high, adjusting to N = ", N
+                n = N
+            print "shifting by ", s
+            do_shift(vstrands,s,n)
+            save_json(sys.argv[3],f)
+        else: 
+            s = calculate_shift(vstrands,"scaf")
+            do_shift(vstrands,s,int(sys.argv[2]),"scaf")
+            connector(vstrands)
+            save_json(sys.argv[3],f)
 
