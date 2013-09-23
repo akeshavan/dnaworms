@@ -73,8 +73,9 @@ def get_max_shifts(shift):
     for i,vs in enumerate(vstrands):
         stap = get_strand_idx(vs["stap"])
         scaf = get_strand_idx(vs["scaf"])
-        N = np.floor(np.int(scaf[-1]-stap[-1])/shift)
-        Ns.append(N)
+        if len(scaf) and len(stap):
+            N = np.floor(np.int(scaf[-1]-stap[-1])/shift)
+            Ns.append(N)
     return int(min(Ns))
 
 def add_except_n1(l,val):
