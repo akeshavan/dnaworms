@@ -91,28 +91,28 @@ def add_except_n1(l,val):
 
     return L
 
-def connector(vstrands):
+def connector(vstrands,key="scaf"):
     """
     Connect staple strands if there is a break anywhere
     """
     for vs in vstrands:
-        idx = [i for i,s in enumerate(vs["scaf"][:-2]) if (s[2]  == -1 and s[3]==-1 and s[1] != -1 and s[0] != -1)\
-                and (vs["scaf"][i+1][0]==-1 and  vs["scaf"][i+1][1]==-1 and vs["scaf"][i+1][2]!=-1 and  vs["scaf"][i+1][3]!=-1)]    
-        idx2 = [i for i,s in enumerate(vs["scaf"][:-2]) if (s[2]  != -1 and s[3]!=-1 and s[1] == -1 and s[0] == -1)\
-                and (vs["scaf"][i+1][0]!=-1 and  vs["scaf"][i+1][1]!=-1 and vs["scaf"][i+1][2]==-1 and  vs["scaf"][i+1][3]==-1)]    
+        idx = [i for i,s in enumerate(vs[key][:-2]) if (s[2]  == -1 and s[3]==-1 and s[1] != -1 and s[0] != -1)\
+                and (vs[key][i+1][0]==-1 and  vs[key][i+1][1]==-1 and vs[key][i+1][2]!=-1 and  vs[key][i+1][3]!=-1)]    
+        idx2 = [i for i,s in enumerate(vs[key][:-2]) if (s[2]  != -1 and s[3]!=-1 and s[1] == -1 and s[0] == -1)\
+                and (vs[key][i+1][0]!=-1 and  vs[key][i+1][1]!=-1 and vs[key][i+1][2]==-1 and  vs[key][i+1][3]==-1)]    
         for id in idx:
-            a,b,_,_ = vs["scaf"][id]
-            _,_,c,d = vs["scaf"][id+1]
-            print vs["scaf"][id], a,b,c,d
-            vs["scaf"][id] = [a,b,c,d-1]
-            vs["scaf"][id+1] = [a,b+1,c,d]
+            a,b,_,_ = vs[key][id]
+            _,_,c,d = vs[key][id+1]
+            print vs[key][id], a,b,c,d
+            vs[key][id] = [a,b,c,d-1]
+            vs[key][id+1] = [a,b+1,c,d]
 
         for id in idx2:
-            a,b,_,_ = vs["scaf"][id+1]
-            _,_,c,d = vs["scaf"][id]
-            print vs["scaf"][id], a,b,c,d
-            vs["scaf"][id] = [a,b-1,c,d]
-            vs["scaf"][id+1] = [a,b,c,d+1]
+            a,b,_,_ = vs[key][id+1]
+            _,_,c,d = vs[key][id]
+            print vs[key][id], a,b,c,d
+            vs[key][id] = [a,b-1,c,d]
+            vs[key][id+1] = [a,b,c,d+1]
 
 
 def do_shift(vstrands,shift,N=1,key="stap"):
@@ -144,8 +144,8 @@ def do_shift(vstrands,shift,N=1,key="stap"):
       
 
 if __name__ == "__main__":
-    help = "USAGE: python <filename> <number of repeats> <out filename> <scaf or stap>"
-    if len(sys.argv) != 5:
+    help = "USAGE: python <filename> <number of repeats> <out filename> <scaf or stap> <Connect True(1) or False(0)>"
+    if len(sys.argv) != 6:
         raise Exception(help)
     else:
         f = load_json(sys.argv[1])
@@ -159,6 +159,8 @@ if __name__ == "__main__":
                 n = N
             print "shifting by ", s
             do_shift(vstrands,s,n)
+            if bool(sys.argv[-1]):
+                connector(vstrands,"stap")
             save_json(sys.argv[3],f)
         else: 
             s = calculate_shift(vstrands,"scaf")
