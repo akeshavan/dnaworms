@@ -150,7 +150,7 @@ if __name__ == "__main__":
     else:
         f = load_json(sys.argv[1])
         vstrands = f["vstrands"]
-        if sys.argv[-1] == "stap":
+        if sys.argv[-2] == "stap":
             s = calculate_shift(vstrands)
             N = get_max_shifts(s)
             n = int(sys.argv[2])
@@ -159,7 +159,7 @@ if __name__ == "__main__":
                 n = N
             print "shifting by ", s
             do_shift(vstrands,s,n)
-            if bool(sys.argv[-1]):
+            if int(sys.argv[-1]):
                 connector(vstrands,"stap")
             save_json(sys.argv[3],f)
         else: 
