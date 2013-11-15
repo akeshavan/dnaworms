@@ -274,6 +274,55 @@ class NoodleBase(object):
             Helix['stap'] = self.stap[i][:-1]
         save_json(outfile,json)
 
+    def _print_staple_crossovers(self):
+        helices = self.helices
+        Xs = self.Xs
+        for helix,data in helices.iteritems():
+            neighbors = np.unique(data)[1:]
+            for n in neighbors:
+                print helix, "-->", int(n), np.nonzero(data==n)[0]
+
+    def _print_scaffold_crossovers(self):
+        helices = self.scaf_helices
+        Xs = self.scaf_Xs
+        for helix,data in helices.iteritems():
+            neighbors = np.unique(data)[1:]
+            for n in neighbors:
+                print helix, "-->", int(n), np.nonzero(data==n)[0]
+
+    def scaffX(self,helix1,helix2,idx):
+        helices = self.scaf_helices
+        #validate
+        if not helices[helix1][idx] == helix2:
+            raise(Exception("Incorrect inputs"))
+
+        #assign
+        self.scaf_Xs[helix1][idx] = True
+        self.scaf_Xs[helix2][idx] = True
+
+        #validate everything
+        self.validate_crossovers()
+
+    def stapleX(self,helix1,helix2,idx):
+        helices = self.helices
+        #validate
+        if not helices[helix1][idx] == helix2:
+            raise(Exception("Incorrect inputs"))
+
+        #assign
+        self.Xs[helix1][idx] = True
+        self.Xs[helix2][idx] = True
+
+        #validate everything
+        self.validate_crossovers()
+
+    def stapleK(self,helix,idx):
+        #validate: can't break if there is a crossover there.
+        if self.Xs[helix][idx]:
+            raise Exception("There is a crossover at %d %d"%(helix, idx))
+        self.Ks[helix][idx] = True
+        self.validate_kinks()
+
     def randomize(self):
         self.randomize_scaffold()
         self.randomize_staple()
