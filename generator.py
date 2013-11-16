@@ -4,6 +4,7 @@ import networkx as nx
 import matplotlib
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
+import os
 
 
 class NoodleBase(object):
@@ -265,7 +266,8 @@ class NoodleBase(object):
     def to_cadnano(self,outfile="noodle.json"):
         self._stap_cadnano()
         self._scaf_cadnano()
-        json = load_json('template.json')
+        template_path = os.path.join(os.path.split(os.path.realpath(__file__))[0],'json','template.json')
+        json = load_json(template_path)
         for i,Helix in enumerate(json['vstrands']):
             #for key,item in Helix.iteritems():
             Helix['skip'] = [[0]]*(self._length-1)
