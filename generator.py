@@ -79,10 +79,10 @@ class NoodleBase(object):
         for helix, data in self.Xs.iteritems():
             if -1 in data[self.Ks[helix]]:
                 raise Exception("Invalid!")
-            kidx = np.nonzero(self.Ks[helix])[0]
-            kdist = np.diff(kidx)
-            if (kdist<6).any():
-                raise(Exception("Kinks are too close together!"))
+            #kidx = np.nonzero(self.Ks[helix])[0]
+            #kdist = np.diff(kidx)
+            #if (kdist<6).any():
+            #    raise(Exception("Kinks are too close together!"))
         return True
 
     def _init_cadnano(self,helix, direction, length):
@@ -191,13 +191,13 @@ class NoodleBase(object):
     def _init_scaffold(self):
         self.scaf_helices = {}
         for helix, data in self.helices.iteritems():
-            self.scaf_helices[helix] = -np.ones(self._length+5)
+            self.scaf_helices[helix] = -np.ones(self._length)
             neighbors = np.unique(data)[1:]
             for N in neighbors:
                 idx = np.nonzero(data==N)[0]
-                self.scaf_helices[helix][idx+5] = N
-                self.scaf_helices[helix][idx-5] = N
-            self.scaf_helices[helix] = self.scaf_helices[helix][:-5]
+                self.scaf_helices[helix][(idx+5)%(self._length-1)] = N
+                self.scaf_helices[helix][(idx-5)%(self._length-1)] = N
+            self.scaf_helices[helix] = self.scaf_helices[helix]
 
 
         for helix, data in self.scaf_helices.iteritems():
@@ -328,3 +328,67 @@ class NoodleBase(object):
     def randomize(self):
         self.randomize_scaffold()
         self.randomize_staple()
+
+class StepNoodle(NoodleBase):
+    def __init__(self,length=84):
+        super(StepNoodle,self).__init__(length)
+        self._staple_step()
+        self._step_kinks()
+
+
+    def _get_preXst(self,helix1, helix2):
+        return np.nonzero(self.helices[helix1] == helix2)[0]
+
+    def _get_stapleXs_by_edge(self):
+        edges = []
+        for i in range(6):
+            if i <5:
+                edges.append([i,i+1,self._get_preXst(i, i+1)])
+            if i==5:
+                edges.append([i,0,self._get_preXst(i, 0)])
+
+        edges1 = [edges[0],edges[5],edges[4],edges[3],edges[2],edges[1]]
+        return edges, edges1
+
+    def _staple_step(self):
+        edges, edges_descending = self._get_stapleXs_by_edge()
+        increment = self._length/6
+
+        if not increment in edges[1][-1] and not increment in edges_descending[1][-1]:
+            print increment, edges[1][-1][1::2], edges_descending[1][-1][1::2]
+            raise Exception("Cannot make an even step!")
+
+        else:
+            if increment in edges[1][-1]:
+                ed = edges
+            else:
+                ed = edges_descending
+
+        for i,E in enumerate(ed):
+            if E[0] == 0:
+                idx1 = E[2][0]
+                idx2 = E[2][-2]
+            else:
+                idx1 += increment
+                idx2 = idx1 - 1
+            if idx1 <self._length and idx2< self._length:
+                self.stapleX(E[0],E[1],idx1)
+                self.stapleX(E[0],E[1],idx2)
+
+    def _first_breakset(self):
+        for i in range(6):
+            kinks = np.nonzero(self.helices[(i+1)%6]==(i+2)%6)[0][self.Xs[(i+1)%6][self.helices[(i+1)%6]==(i+2)%6]]
+            self.stapleK(i,kinks[0])
+            self.stapleK(i,kinks[1])
+
+    def _second_breakset(self):
+        for helix in range(6):
+            first = np.nonzero(self.Ks[helix])[0]
+            for i in range((self._length-1)/42):
+                kinks = (first +42*i)%(self._length-1)
+                self.stapleK(helix, kinks[0])
+                self.stapleK(helix, kinks[1])
+
+    def _step_kinks(self):
+        self._first_breakset()
+        self._second_breakset()
