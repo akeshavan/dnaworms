@@ -330,10 +330,10 @@ class NoodleBase(object):
         self.randomize_staple()
 
 class StepNoodle(NoodleBase):
-    def __init__(self,length=84):
+    def __init__(self,length=84,kink_shift=0):
         super(StepNoodle,self).__init__(length)
         self._staple_step()
-        self._step_kinks()
+        self._step_kinks(kink_shift)
 
 
     def _get_preXst(self,helix1, helix2):
@@ -375,9 +375,9 @@ class StepNoodle(NoodleBase):
                 self.stapleX(E[0],E[1],idx1)
                 self.stapleX(E[0],E[1],idx2)
 
-    def _first_breakset(self):
+    def _first_breakset(self,shift):
         for i in range(6):
-            kinks = np.nonzero(self.helices[(i+1)%6]==(i+2)%6)[0][self.Xs[(i+1)%6][self.helices[(i+1)%6]==(i+2)%6]]
+            kinks = (np.nonzero(self.helices[(i+1)%6]==(i+2)%6)[0][self.Xs[(i+1)%6][self.helices[(i+1)%6]==(i+2)%6]]+shift*21)%(self._length-1)
             self.stapleK(i,kinks[0])
             self.stapleK(i,kinks[1])
 
@@ -389,6 +389,6 @@ class StepNoodle(NoodleBase):
                 self.stapleK(helix, kinks[0])
                 self.stapleK(helix, kinks[1])
 
-    def _step_kinks(self):
-        self._first_breakset()
+    def _step_kinks(self,shift):
+        self._first_breakset(shift)
         self._second_breakset()
